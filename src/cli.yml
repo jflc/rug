@@ -1,0 +1,15 @@
+name: rug
+args:
+  - min:
+      help: minimum value
+      required: true
+      index: 1
+  - max:
+      help: maximum value
+      required: true
+      index: 2
+  - num:
+      help: amount of numbers to generate
+      required: false
+      default_value: "1"
+      index: 3

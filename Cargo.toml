@@ -1,0 +1,9 @@
+[package]
+name = "rug"
+version = "0.1.0"
+authors = ["Joao Cardoso <jflc@ua.pt>"]
+edition = "2018"
+
+[dependencies]
+rand = "0.6"
+clap = {version = "2.32", features = ["yaml"]}
