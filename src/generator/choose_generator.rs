@@ -1,28 +1,30 @@
 extern crate rand;
 
 use rand::prelude::*;
-use super::Config;
-use super::Generator;
+use super::*;
 
 pub struct ChooseGenerator {
-    config: Config,
-    rng: ThreadRng
+    rng: Box<RngCore>
+}
+
+impl ChooseGenerator {
+    /// create an choose generator instance with default rng
+    pub fn new() -> Self {
+        ChooseGenerator::new_with_rng(default_rng())
+    }
+
+    /// create an choose generator instance
+    pub fn new_with_rng<R: RngCore + 'static>(rng: R) -> Self {
+        ChooseGenerator {
+            rng: Box::new(rng)
+        }
+    }
 }
 
 impl Generator for ChooseGenerator {
 
-    fn run(&mut self) -> Vec<i32> {
-        (self.config.min..self.config.max).choose_multiple(&mut self.rng, self.config.num as usize)
-    }
-}
-
-impl ChooseGenerator {
-    /// create an choose generator instance
-    pub fn new(config: Config) -> Self {
-        Self {
-            config,
-            rng: thread_rng()
-        }
+    fn run(&mut self, config: &Config) -> Vec<i32> {
+        (config.min..config.max).choose_multiple(&mut self.rng, config.num)
     }
 }
 
@@ -35,6 +37,11 @@ mod tests {
     #[test]
     fn test_non_repeated_values() {
         assert_non_repeated_values(ChooseGenerator::new);
+    }
+
+    #[test]
+    fn test_size() {
+        assert_size(ChooseGenerator::new);
     }
 
     #[test]

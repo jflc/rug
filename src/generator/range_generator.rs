@@ -1,35 +1,37 @@
 extern crate rand;
 
 use rand::prelude::*;
-use super::Config;
-use super::Generator;
+use super::*;
 
 pub struct RangeGenerator {
-    config: Config,
-    rng: ThreadRng
+    rng: Box<RngCore>
+}
+
+impl RangeGenerator {
+    /// create a range generator instance with default rng
+    pub fn new() -> Self {
+        RangeGenerator::new_with_rng(default_rng())
+    }
+
+    /// create a range generator instance
+    pub fn new_with_rng<R: RngCore + 'static>(rng: R) -> Self {
+        RangeGenerator {
+            rng: Box::new(rng)
+        }
+    }
 }
 
 impl Generator for RangeGenerator {
 
-    fn run(&mut self) -> Vec<i32> {
+    fn run(&mut self, config: &Config) -> Vec<i32> {
         let mut result = Vec::new();
-        let mut sample: Vec<i32> = (self.config.min..self.config.max).collect();
-        for _ in 0..self.config.num {
+        let mut sample: Vec<i32> = (config.min..config.max).collect();
+        for _ in 0..config.num {
             let size = sample.len();
             let rand_index = self.rng.gen_range(0, size);
             result.push(sample.remove(rand_index));
         }
         return result;
-    }
-}
-
-impl RangeGenerator {
-    /// create an swap generator instance
-    pub fn new(config: Config) -> Self {
-        Self {
-            config,
-            rng: thread_rng()
-        }
     }
 }
 
@@ -42,6 +44,11 @@ mod tests {
     #[test]
     fn test_non_repeated_values() {
         assert_non_repeated_values(RangeGenerator::new);
+    }
+
+    #[test]
+    fn test_size() {
+        assert_size(RangeGenerator::new);
     }
 
     #[test]

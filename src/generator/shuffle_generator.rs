@@ -1,33 +1,36 @@
 extern crate rand;
 
 use rand::prelude::*;
-use rand::seq::SliceRandom;
-use super::Config;
-use super::Generator;
+use super::*;
+use std::prelude::v1::Vec;
 
 pub struct ShuffleGenerator {
-    config: Config,
-    rng: ThreadRng
+    rng: Box<RngCore>
+}
+
+impl ShuffleGenerator {
+    /// create a shuffle generator instance with default rng
+    pub fn new() -> Self {
+        ShuffleGenerator::new_with_rng(default_rng())
+    }
+
+    /// create a shuffle generator instance
+    pub fn new_with_rng<R: RngCore + 'static>(rng: R) -> Self {
+        ShuffleGenerator {
+            rng: Box::new(rng)
+        }
+    }
 }
 
 impl Generator for ShuffleGenerator {
 
-    fn run(&mut self) -> Vec<i32> {
-        let mut sample: Vec<i32> = (self.config.min..self.config.max).collect();
-        let (result, _) = sample.partial_shuffle(&mut self.rng, self.config.num as usize);
-        result.to_vec()
+    fn run(&mut self, config: &Config) -> Vec<i32> {
+        (config.min..config.max).collect::<Vec<i32>>()
+            .partial_shuffle(&mut self.rng, config.num)
+            .0
+            .to_vec()
     }
 
-}
-
-impl ShuffleGenerator {
-    /// create an shuffle generator instance
-    pub fn new(config: Config) -> Self {
-        Self {
-            config,
-            rng: thread_rng()
-        }
-    }
 }
 
 #[cfg(test)]
@@ -39,6 +42,11 @@ mod tests {
     #[test]
     fn test_non_repeated_values() {
         assert_non_repeated_values(ShuffleGenerator::new);
+    }
+
+    #[test]
+    fn test_size() {
+        assert_size(ShuffleGenerator::new);
     }
 
     #[test]

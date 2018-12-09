@@ -13,3 +13,20 @@ args:
       required: false
       default_value: "1"
       index: 3
+  - alg:
+      help: algorithm to be used
+      required: false
+      short: a
+      long: alg
+      possible_values:
+        - "aux"
+        - "choose"
+        - "range"
+        - "shuffle"
+        - "swap"
+      default_value: "aux"
+  - sort:
+      help: sort results before print them
+      required: false
+      short: s
+      long: sort

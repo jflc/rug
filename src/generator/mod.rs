@@ -1,18 +1,20 @@
+use rand::prelude::*;
+
 pub mod aux_generator;
 pub mod range_generator;
 pub mod choose_generator;
 pub mod shuffle_generator;
+pub mod swap_generator;
 
-#[derive(Debug, PartialEq, Copy, Clone)]
 pub struct Config {
     min: i32,
     max: i32,
-    num: u32
+    num: usize
 }
 
 impl Config {
 
-    pub fn new(min: i32, max: i32, num: u32) -> Result<Self, String>{
+    pub fn new(min: i32, max: i32, num: usize) -> Result<Self, String>{
         Config {
             min,
             max,
@@ -24,7 +26,7 @@ impl Config {
     fn validate(self) -> Result<Self, String> {
         match (self.min, self.max, self.num) {
             (min, max, _) if max < min => Err(String::from("max value needs to be bigger than min value")),
-            (min, max, num) if ((max - min + 1) as u32) < num => Err(String::from("num cannot be bigger than the min..max range")),
+            (min, max, num) if ((max - min + 1) as usize) < num => Err(String::from("num cannot be bigger than the min..max range")),
             _ => Ok(self)
         }
     }
@@ -33,8 +35,12 @@ impl Config {
 pub trait Generator {
 
     /// generate random number sequence
-    fn run(&mut self) -> Vec<i32>;
+    fn run(&mut self, config: &Config) -> Vec<i32>;
 
+}
+
+fn default_rng() -> impl RngCore {
+    thread_rng()
 }
 
 
@@ -50,13 +56,13 @@ pub mod tests {
 
 
     trait TestGenerator {
-        fn run_and_time(&mut self) -> (Vec<i32>, Duration);
+        fn run_and_time(&mut self, config: &Config) -> (Vec<i32>, Duration);
     }
 
     impl<G: Generator> TestGenerator for G {
-        fn run_and_time(&mut self) -> (Vec<i32>, Duration) {
+        fn run_and_time(&mut self, config: &Config) -> (Vec<i32>, Duration) {
             let start = Instant::now();
-            let result = self.run();
+            let result = self.run(config);
             (result, start.elapsed())
         }
     }
@@ -69,7 +75,8 @@ pub mod tests {
             1
         );
 
-        assert_eq!(result, Err(String::from("max value needs to be bigger than min value")));
+        assert_eq!(result.is_err(), true);
+        assert_eq!(result.err().unwrap(), String::from("max value needs to be bigger than min value"));
     }
 
     #[test]
@@ -80,7 +87,8 @@ pub mod tests {
             30
         );
 
-        assert_eq!(result, Err(String::from("num cannot be bigger than the min..max range")));
+        assert_eq!(result.is_err(), true);
+        assert_eq!(result.err().unwrap(), String::from("num cannot be bigger than the min..max range"));
     }
 
     #[test]
@@ -91,11 +99,11 @@ pub mod tests {
             10
         );
 
-        assert_eq!(result, Ok(Config {
-            min: 10,
-            max: 20,
-            num: 10
-        }));
+        assert_eq!(result.is_ok(), true);
+        let config = result.unwrap();
+        assert_eq!(config.min, 10);
+        assert_eq!(config.max, 20);
+        assert_eq!(config.num, 10);
     }
 
     #[test]
@@ -106,57 +114,73 @@ pub mod tests {
             1
         );
 
-        assert_eq!(result, Ok(Config {
-            min: 1,
-            max: 1,
-            num: 1
-        }));
+        assert_eq!(result.is_ok(), true);
+        let config = result.unwrap();
+        assert_eq!(config.min, 1);
+        assert_eq!(config.max, 1);
+        assert_eq!(config.num, 1);
     }
 
-    pub fn assert_non_repeated_values<F, R>(constructor: F) where F: Fn(Config) -> R, R: Generator {
-//    fn assert_non_repeated_values<F>(constructor: F) where F: for<'a> Fn(&'a Config) -> ('a + Generator) {
-//    fn assert_non_repeated_values<F, R>(constructor: F) where F: Fn(&Config) -> R, R: Generator {
-        let config = Config {
-            min: 1000,
-            max: 2000,
-            num: 500
-        };
-        let mut generator = constructor(config);
+    pub fn assert_non_repeated_values<F, R>(constructor: F) where F: Fn() -> R, R: Generator {
+        let config = Config::new(
+            1000,
+            2000,
+            500
+        ).expect("Unable to create config");
 
-        let result = generator.run();
+        let mut generator = constructor();
+
+        let result = generator.run(&config);
 
         let mut set = HashSet::new();
 
         assert!(result.iter().all(|e| set.insert(e)));
     }
 
-    pub fn assert_values_probability<F, R>(constructor: F) where F: Fn(Config) -> R, R: Generator {
-        let iterations: u32 = 100000;
-        let config = Config {
-            min: 1,
-            max: 100,
-            num: 25
-        };
+    pub fn assert_size<F, R>(constructor: F) where F: Fn() -> R, R: Generator {
+        let config = Config::new(
+            10,
+            100,
+            25
+        ).expect("Unable to create config");
 
-        let mut generator = constructor(config);
+        let mut generator = constructor();
+
+        let result = generator.run(&config);
+
+        assert_eq!(result.len(), config.num);
+    }
+
+    pub fn assert_values_probability<F, R>(constructor: F) where F: Fn() -> R, R: Generator {
+        let iterations: u32 = 100000;
+        let config = Config::new(
+            1,
+            100,
+            25
+        ).expect("Unable to create config");
+
+        let mut generator = constructor();
 
         let mut values: HashMap<i32, u32> = (config.min..config.max).map(|i| (i,0)).collect();
         let mut times: Vec<Duration> = Vec::new();
 
-        (0..iterations).map(|_| generator.run_and_time())
+        (0..iterations).map(|_| generator.run_and_time(&config))
             .flat_map(|(r, t)| {times.push(t); r})
             .for_each(|v| {values.entry(v).and_modify(|e|  *e += 1 );});
 
         let min = *values.values().min().unwrap() as f64 / (iterations as f64 / 100.0);
         let max = *values.values().max().unwrap() as f64 / (iterations as f64 / 100.0);
-        println!("min: {:?}%; max: {:?}%", min, max);
+        let diff = max - min;
 
         let fastest = times.iter().min().unwrap();
         let slowest = times.iter().max().unwrap();
         let average: Duration = times.iter().sum::<Duration>() / iterations;
-        println!("fastest: {:?}; slowest: {:?}; average: {:?};", fastest, slowest, average);
 
-        let diff = max - min;
+        println!();
+        println!("min: {:?}%; max: {:?}%; diff: {:?}%", min, max, diff);
+        println!("fastest: {:?}; slowest: {:?}; average: {:?};", fastest, slowest, average);
+        println!();
+
         assert!(diff <= 1.1);
     }
 
