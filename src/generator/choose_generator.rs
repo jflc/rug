@@ -8,16 +8,18 @@ pub struct ChooseGenerator {
 }
 
 impl ChooseGenerator {
-    /// create an choose generator instance with default rng
-    pub fn new() -> Self {
-        ChooseGenerator::new_with_rng(default_rng())
-    }
-
     /// create an choose generator instance
-    pub fn new_with_rng<R: RngCore + 'static>(rng: R) -> Self {
+    pub fn new<R: RngCore + 'static>(rng: R) -> Self {
         ChooseGenerator {
             rng: Box::new(rng)
         }
+    }
+}
+
+impl Default for ChooseGenerator {
+    /// create a choose generator instance with default rng
+    fn default() -> Self {
+        ChooseGenerator::new(default_rng())
     }
 }
 
@@ -36,17 +38,17 @@ mod tests {
 
     #[test]
     fn test_non_repeated_values() {
-        assert_non_repeated_values(ChooseGenerator::new);
+        assert_non_repeated_values(ChooseGenerator::default);
     }
 
     #[test]
     fn test_size() {
-        assert_size(ChooseGenerator::new);
+        assert_size(ChooseGenerator::default);
     }
 
     #[test]
     fn test_values_probability() {
-        assert_values_probability(ChooseGenerator::new);
+        assert_values_probability(ChooseGenerator::default);
     }
 
 }

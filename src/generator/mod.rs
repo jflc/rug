@@ -14,6 +14,7 @@ pub struct Config {
 
 impl Config {
 
+    /// create a config instance
     pub fn new(min: i32, max: i32, num: usize) -> Result<Self, String>{
         Config {
             min,

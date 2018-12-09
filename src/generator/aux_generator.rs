@@ -10,13 +10,8 @@ pub struct AuxGenerator {
 
 impl AuxGenerator {
 
-    /// create an aux generator instance with default rng
-    pub fn new() -> AuxGenerator {
-        AuxGenerator::new_with_rng(default_rng())
-    }
-
     /// create an aux generator instance
-    pub fn new_with_rng<R: RngCore + 'static>(rng: R) -> AuxGenerator {
+    pub fn new<R: RngCore + 'static>(rng: R) -> AuxGenerator {
         AuxGenerator {
             rng: Box::new(rng)
         }
@@ -28,10 +23,17 @@ impl AuxGenerator {
         let last = size - 1;
         let index= self.rng.gen_range(0, size);
         let result = aux[index].unwrap_or(index);
-        aux[index] = aux[last].or(Some(last));
+        aux[index] = aux[last].or_else(|| Some(last));
         result
     }
 
+}
+
+impl Default for AuxGenerator {
+    /// create an aux generator instance with default rng
+    fn default() -> Self {
+        AuxGenerator::new(default_rng())
+    }
 }
 
 impl Generator for AuxGenerator {
@@ -59,17 +61,17 @@ mod tests {
 
     #[test]
     fn test_non_repeated_values() {
-        assert_non_repeated_values(AuxGenerator::new);
+        assert_non_repeated_values(AuxGenerator::default);
     }
 
     #[test]
     fn test_size() {
-        assert_size(AuxGenerator::new);
+        assert_size(AuxGenerator::default);
     }
 
     #[test]
     fn test_values_probability() {
-        assert_values_probability(AuxGenerator::new);
+        assert_values_probability(AuxGenerator::default);
     }
 
 }

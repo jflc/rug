@@ -8,16 +8,18 @@ pub struct SwapGenerator {
 }
 
 impl SwapGenerator {
-    /// create a swap generator instance with default rng
-    pub fn new() -> Self {
-        SwapGenerator::new_with_rng(default_rng())
-    }
-
     /// create a swap generator instance
-    pub fn new_with_rng<R: RngCore + 'static>(rng: R) -> Self {
+    pub fn new<R: RngCore + 'static>(rng: R) -> Self {
         SwapGenerator {
             rng: Box::new(rng)
         }
+    }
+}
+
+impl Default for SwapGenerator {
+    /// create a swap generator instance with default rng
+    fn default() -> Self {
+        SwapGenerator::new(default_rng())
     }
 }
 
@@ -30,7 +32,7 @@ impl Generator for SwapGenerator {
             let rand_index = self.rng.gen_range(i, size);
             result.swap(i, rand_index);
         }
-        return result[..config.num].to_vec();
+        result[..config.num].to_vec()
     }
 }
 
@@ -42,17 +44,17 @@ mod tests {
 
     #[test]
     fn test_non_repeated_values() {
-        assert_non_repeated_values(SwapGenerator::new);
+        assert_non_repeated_values(SwapGenerator::default);
     }
 
     #[test]
     fn test_size() {
-        assert_size(SwapGenerator::new);
+        assert_size(SwapGenerator::default);
     }
 
     #[test]
     fn test_values_probability() {
-        assert_values_probability(SwapGenerator::new);
+        assert_values_probability(SwapGenerator::default);
     }
 
 }

@@ -26,11 +26,11 @@ impl AlgType {
     fn create_generator(&self) -> Box<Generator> {
         println!("Algorithm: {:?}", self);
         match *self {
-            AlgType::Aux => Box::new(AuxGenerator::new()),
-            AlgType::Choose => Box::new(ChooseGenerator::new()),
-            AlgType::Range => Box::new(RangeGenerator::new()),
-            AlgType::Shuffle => Box::new(ShuffleGenerator::new()),
-            AlgType::Swap => Box::new(SwapGenerator::new())
+            AlgType::Aux => Box::new(AuxGenerator::default()),
+            AlgType::Choose => Box::new(ChooseGenerator::default()),
+            AlgType::Range => Box::new(RangeGenerator::default()),
+            AlgType::Shuffle => Box::new(ShuffleGenerator::default()),
+            AlgType::Swap => Box::new(SwapGenerator::default())
         }
     }
 }

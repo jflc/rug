@@ -9,16 +9,18 @@ pub struct ShuffleGenerator {
 }
 
 impl ShuffleGenerator {
-    /// create a shuffle generator instance with default rng
-    pub fn new() -> Self {
-        ShuffleGenerator::new_with_rng(default_rng())
-    }
-
     /// create a shuffle generator instance
-    pub fn new_with_rng<R: RngCore + 'static>(rng: R) -> Self {
+    pub fn new<R: RngCore + 'static>(rng: R) -> Self {
         ShuffleGenerator {
             rng: Box::new(rng)
         }
+    }
+}
+
+impl Default for ShuffleGenerator {
+    /// create a shuffle generator instance with default rng
+    fn default() -> Self {
+        ShuffleGenerator::new(default_rng())
     }
 }
 
@@ -41,17 +43,17 @@ mod tests {
 
     #[test]
     fn test_non_repeated_values() {
-        assert_non_repeated_values(ShuffleGenerator::new);
+        assert_non_repeated_values(ShuffleGenerator::default);
     }
 
     #[test]
     fn test_size() {
-        assert_size(ShuffleGenerator::new);
+        assert_size(ShuffleGenerator::default);
     }
 
     #[test]
     fn test_values_probability() {
-        assert_values_probability(ShuffleGenerator::new);
+        assert_values_probability(ShuffleGenerator::default);
     }
 
 }
