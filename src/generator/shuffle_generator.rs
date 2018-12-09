@@ -27,7 +27,7 @@ impl Default for ShuffleGenerator {
 impl Generator for ShuffleGenerator {
 
     fn run(&mut self, config: &Config) -> Vec<i32> {
-        (config.min..config.max).collect::<Vec<i32>>()
+        (config.min..config.max+1).collect::<Vec<i32>>()
             .partial_shuffle(&mut self.rng, config.num)
             .0
             .to_vec()

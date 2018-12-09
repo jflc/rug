@@ -27,7 +27,7 @@ impl Generator for RangeGenerator {
 
     fn run(&mut self, config: &Config) -> Vec<i32> {
         let mut result = Vec::new();
-        let mut sample: Vec<i32> = (config.min..config.max).collect();
+        let mut sample: Vec<i32> = (config.min..config.max+1).collect();
         for _ in 0..config.num {
             let size = sample.len();
             let rand_index = self.rng.gen_range(0, size);

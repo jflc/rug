@@ -26,7 +26,7 @@ impl Default for SwapGenerator {
 impl Generator for SwapGenerator {
 
     fn run(&mut self, config: &Config) -> Vec<i32> {
-        let mut result: Vec<i32> = (config.min..config.max).collect();
+        let mut result: Vec<i32> = (config.min..config.max+1).collect();
         let size = result.len();
         for i in 0..config.num {
             let rand_index = self.rng.gen_range(i, size);

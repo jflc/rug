@@ -26,7 +26,7 @@ impl Default for ChooseGenerator {
 impl Generator for ChooseGenerator {
 
     fn run(&mut self, config: &Config) -> Vec<i32> {
-        (config.min..config.max).choose_multiple(&mut self.rng, config.num)
+        (config.min..config.max+1).choose_multiple(&mut self.rng, config.num)
     }
 }
 

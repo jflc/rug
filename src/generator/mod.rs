@@ -135,14 +135,15 @@ pub mod tests {
 
         let mut set = HashSet::new();
 
+        assert_eq!(result.len(), config.num);
         assert!(result.iter().all(|e| set.insert(e)));
     }
 
     pub fn assert_size<F, R>(constructor: F) where F: Fn() -> R, R: Generator {
         let config = Config::new(
-            10,
             100,
-            25
+            200,
+            100
         ).expect("Unable to create config");
 
         let mut generator = constructor();

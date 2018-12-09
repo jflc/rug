@@ -7,7 +7,6 @@ pub struct AuxGenerator {
     rng: Box<RngCore>
 }
 
-
 impl AuxGenerator {
 
     /// create an aux generator instance
